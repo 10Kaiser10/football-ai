@@ -13,7 +13,7 @@ public class PSOEvolver : MonoBehaviour
     //evolution
     //public float groundTouchWieght = 1;
     //public float distanceWieght = 1;
-    public float mutationNum = 1;
+    public float mutationNum = 10;
 
     //population
     public int populationSize = 16;
@@ -29,13 +29,13 @@ public class PSOEvolver : MonoBehaviour
     public float targetSpeedRange = 10;
 
     //neural network
-    private int inputNodes = 8;
+    private int inputNodes = 6;
     private int outputNodes = 2;
     private int[] hiddenLayersNodes = { };
-    private int[] LayersNodes = { 8, 2 };
+    private int[] LayersNodes = { 6, 2 };
     private float[][][,] weightsNBiases;
     private float[][][,] nextWeightsNBiases;
-    private Vector2 initiantionRange = new Vector2(-0.01f, 0.01f);
+    private Vector2 initiantionRange = new Vector2(-5000f, 5000f);
 
     //maximums arrays
     float globalMax = -100000;
@@ -45,7 +45,7 @@ public class PSOEvolver : MonoBehaviour
 
     //pso
     float[][][,] velocity;
-    float w = 0.729f, c1 = 0.95f, c2 = 0.95f;
+    float w = 0.729f, c1 = 2.05f, c2 = 2.05f;
 
     public void Begin()
     {
@@ -86,11 +86,13 @@ public class PSOEvolver : MonoBehaviour
             objBrain.hiddenLayersNodes = hiddenLayersNodes;
             objBrain.LayersNodes = LayersNodes;
             objBrain.weightsNBiases = weightsNBiases[i];
-            objBrain.target = new Vector3(10 * (i / spawnRows) + Random.Range(-spawnRadius, spawnRadius), 0.5f, 10 * (i % spawnRows) + Random.Range(-spawnRadius, spawnRadius));
+            objBrain.target = new Vector3(Random.Range(-spawnRadius, spawnRadius), 0.5f, Random.Range(-spawnRadius, spawnRadius));
             objBrain.targetVel = new Vector3(Random.Range(-targetSpeedRange, targetSpeedRange), 0, Random.Range(-targetSpeedRange, targetSpeedRange));
             objBrain.simTime = simDuration;
 
-            population[i].transform.GetChild(2).transform.position = objBrain.target;
+            population[i].transform.GetChild(2).transform.localPosition = objBrain.target;
+            float yrot = Vector2.Angle(Vector2.right, new Vector2(objBrain.targetVel.x, objBrain.targetVel.z));
+            population[i].transform.GetChild(2).transform.Rotate(yrot, 0, 0);
         }
 
         individualMaxWnB = new float[populationSize][][,];
@@ -181,11 +183,13 @@ public class PSOEvolver : MonoBehaviour
             objBrain.hiddenLayersNodes = hiddenLayersNodes;
             objBrain.LayersNodes = LayersNodes;
             objBrain.weightsNBiases = weightsNBiases[i];
-            objBrain.target = new Vector3(10 * (i / spawnRows) + Random.Range(-spawnRadius, spawnRadius), 0.5f, 10 * (i % spawnRows) + Random.Range(-spawnRadius, spawnRadius));
+            objBrain.target = new Vector3(Random.Range(-spawnRadius, spawnRadius), 0.5f,Random.Range(-spawnRadius, spawnRadius));
             objBrain.targetVel = new Vector3(Random.Range(-targetSpeedRange, targetSpeedRange), 0, Random.Range(-targetSpeedRange, targetSpeedRange));
             objBrain.simTime = simDuration;
 
-            population[i].transform.GetChild(2).transform.position = objBrain.target;
+            population[i].transform.GetChild(2).transform.localPosition = objBrain.target;
+            float yrot = Vector2.Angle(Vector2.right, new Vector2(objBrain.targetVel.x, objBrain.targetVel.z));
+            population[i].transform.GetChild(2).transform.Rotate(yrot, 0, 0);
         }
     }
 
@@ -303,10 +307,10 @@ public class PSOEvolver : MonoBehaviour
                 }
             }
         }
-        Debug.Log(sumPara / numPara);
-        Debug.Log(sumPara1 / numPara);
-        Debug.Log(sumPara2 / numPara);
-        Debug.Log(sumPara3 / numPara);
+        //Debug.Log(sumPara / numPara);
+        //Debug.Log(sumPara1 / numPara);
+        //Debug.Log(sumPara2 / numPara);
+        //Debug.Log(sumPara3 / numPara);
     }
 
     private void FixedUpdate()

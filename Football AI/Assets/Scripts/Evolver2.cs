@@ -29,10 +29,14 @@ public class Evolver2 : MonoBehaviour
     public float targetSpeedRange = 10;
 
     //neural network
-    private int inputNodes = 6;
-    private int outputNodes = 2;
-    private int[] hiddenLayersNodes = { };
-    private int[] LayersNodes = { 6,2};
+    [System.NonSerialized]
+    public int inputNodes = 6;
+    [System.NonSerialized]
+    public int outputNodes = 2;
+    [System.NonSerialized]
+    public int[] hiddenLayersNodes = { };
+    [System.NonSerialized]
+    public int[] LayersNodes = { 6,2};
     private float[][][,] weightsNBiases;
     private float[][][,] nextWeightsNBiases;
     private Vector2 initiantionRange = new Vector2(-50000f, 50000f);
@@ -228,7 +232,7 @@ public class Evolver2 : MonoBehaviour
             dimentions += (1 + LayersNodes[i - 1]) * LayersNodes[i];
         }
         float mutationProb = mutationNum / 100;
-        //mutationNum = Mathf.Max(0.1f, mutationNum - 0.4f);
+        mutationNum = Mathf.Max(0.1f, mutationNum - 0.04f);
 
         for (int i = 0; i < populationSize; i++)
         {
@@ -272,5 +276,15 @@ public class Evolver2 : MonoBehaviour
             respawn();
             generationNum++;
         }
+    }
+
+    public float[][][,] returnBest()
+    {
+        float[][][,] retArr = new float[10][][,];
+        for(int i=0; i<10; i++)
+        {
+            retArr[i] = weightsNBiases[i];
+        }
+        return retArr;
     }
 }

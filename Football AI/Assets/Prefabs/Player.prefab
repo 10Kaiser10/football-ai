@@ -159,7 +159,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   reachedTarget: 0
   body: {fileID: 7433643394001872197}
-  MaxForce: 100
+  MaxForce: 200
   appliedForce: {x: 0, y: 0, z: 0}
 --- !u!1 &7433643394001872197
 GameObject:

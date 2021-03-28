@@ -176,7 +176,7 @@ public class Brain2 : MonoBehaviour
             float velMagScore = Vector3.Magnitude(bodyRb.velocity);
 
             reachedTarget = true;
-            score = 2 + timeScore + velocityAlignScore + dirAlignScore + velMagScore;
+            score = timeScore + 5 * (1 + velocityAlignScore) + 5 * (1 + dirAlignScore);// + velMagScore;
         }
         else if(reachedTarget == false)
         {
