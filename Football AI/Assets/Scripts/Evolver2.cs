@@ -13,7 +13,7 @@ public class Evolver2 : MonoBehaviour
     //evolution
     //public float groundTouchWieght = 1;
     //public float distanceWieght = 1;
-    public float mutationNum = 1;
+    public float mutationNum = 10;
 
     //population
     public int populationSize = 16;
@@ -29,13 +29,13 @@ public class Evolver2 : MonoBehaviour
     public float targetSpeedRange = 10;
 
     //neural network
-    private int inputNodes = 8;
+    private int inputNodes = 6;
     private int outputNodes = 2;
     private int[] hiddenLayersNodes = { };
-    private int[] LayersNodes = { 8, 2 };
+    private int[] LayersNodes = { 6,2};
     private float[][][,] weightsNBiases;
     private float[][][,] nextWeightsNBiases;
-    private Vector2 initiantionRange = new Vector2(-5f, 5f);
+    private Vector2 initiantionRange = new Vector2(-50000f, 50000f);
 
     public void Begin()
     {
@@ -76,11 +76,13 @@ public class Evolver2 : MonoBehaviour
             objBrain.hiddenLayersNodes = hiddenLayersNodes;
             objBrain.LayersNodes = LayersNodes;
             objBrain.weightsNBiases = weightsNBiases[i];
-            objBrain.target = new Vector3(10 * (i / spawnRows) + Random.Range(-spawnRadius, spawnRadius), 0.5f, 10 * (i % spawnRows) + Random.Range(-spawnRadius, spawnRadius));
+            objBrain.target = new Vector3(Random.Range(-spawnRadius, spawnRadius), 0.5f,Random.Range(-spawnRadius, spawnRadius));
             objBrain.targetVel = new Vector3(Random.Range(-targetSpeedRange, targetSpeedRange), 0, Random.Range(-targetSpeedRange, targetSpeedRange));
             objBrain.simTime = simDuration;
 
-            population[i].transform.GetChild(2).transform.position = objBrain.target;
+            population[i].transform.GetChild(2).transform.localPosition = objBrain.target;
+            float yrot = Vector2.Angle(Vector2.right, new Vector2(objBrain.targetVel.x, objBrain.targetVel.z));
+            population[i].transform.GetChild(2).transform.Rotate(yrot,0 , 0);
         }
     }
 
@@ -153,8 +155,11 @@ public class Evolver2 : MonoBehaviour
                 {
                     for (int k = 0; k < cols; k++)
                     {
-                        float coeff = Random.Range(-1f, 1f);
-                        nextWeightsNBiases[i][l][j, k] = (0.5f - coeff) * nextWeightsNBiases[par1][l][j, k] + (0.5f + coeff) * nextWeightsNBiases[par2][l][j, k];
+                        //float coeff = Random.Range(-1f, 1f);
+                        //nextWeightsNBiases[i][l][j, k] = (0.5f - coeff) * nextWeightsNBiases[par1][l][j, k] + (0.5f + coeff) * nextWeightsNBiases[par2][l][j, k];
+
+                        float coeff = Random.Range(0, 1);
+                        nextWeightsNBiases[i][l][j, k] = coeff * nextWeightsNBiases[par1][l][j, k] + (1 - coeff) * nextWeightsNBiases[par2][l][j, k];
                     }
                 }
             }
@@ -205,11 +210,13 @@ public class Evolver2 : MonoBehaviour
             objBrain.hiddenLayersNodes = hiddenLayersNodes;
             objBrain.LayersNodes = LayersNodes;
             objBrain.weightsNBiases = weightsNBiases[i];
-            objBrain.target = new Vector3(10 * (i / spawnRows) + Random.Range(-spawnRadius, spawnRadius), 0.5f, 10 * (i % spawnRows) + Random.Range(-spawnRadius, spawnRadius));
+            objBrain.target = new Vector3(Random.Range(-spawnRadius, spawnRadius), 0.5f,Random.Range(-spawnRadius, spawnRadius));
             objBrain.targetVel = new Vector3(Random.Range(-targetSpeedRange, targetSpeedRange), 0, Random.Range(-targetSpeedRange, targetSpeedRange));
             objBrain.simTime = simDuration;
 
-            population[i].transform.GetChild(2).transform.position = objBrain.target;
+            population[i].transform.GetChild(2).transform.localPosition = objBrain.target;
+            float yrot = Vector2.Angle(Vector2.right, new Vector2(objBrain.targetVel.x, objBrain.targetVel.z));
+            population[i].transform.GetChild(2).transform.Rotate(yrot, 0, 0);
         }
     }
 
@@ -221,6 +228,7 @@ public class Evolver2 : MonoBehaviour
             dimentions += (1 + LayersNodes[i - 1]) * LayersNodes[i];
         }
         float mutationProb = mutationNum / 100;
+        //mutationNum = Mathf.Max(0.1f, mutationNum - 0.4f);
 
         for (int i = 0; i < populationSize; i++)
         {
@@ -235,7 +243,9 @@ public class Evolver2 : MonoBehaviour
                     {
                         if(Random.Range(0f,1f) <= mutationProb)
                         {
-                            nextWeightsNBiases[i][l][j, k] += Random.Range(-0.5f, 0.5f);
+                            int par1 = Random.Range(0, populationSize);
+                            int par2 = Random.Range(0, populationSize);
+                            nextWeightsNBiases[i][l][j, k] += weightsNBiases[par1][l][j, k] - weightsNBiases[par2][l][j, k];
                         }
                     }
                 }
@@ -245,6 +255,8 @@ public class Evolver2 : MonoBehaviour
 
     private void FixedUpdate()
     {
+        //Debug.Log(population[0].transform.GetChild(0).GetComponent<Brain2>().appliedForce);
+
         timer += Time.deltaTime;
 
         if (timer > simDuration)

@@ -25,7 +25,8 @@ public class Brain2 : MonoBehaviour
     private Transform bodyTrans;
     private Rigidbody bodyRb;
     private CapsuleCollider bodyColl;
-    public float MaxForce = 10;
+    public float MaxForce = 100;
+    private Vector3 parentPos;
 
     //neural network
     [System.NonSerialized]
@@ -39,6 +40,8 @@ public class Brain2 : MonoBehaviour
     [System.NonSerialized]
     public float[][,] weightsNBiases;
 
+    public Vector3 appliedForce;
+
     void Start()
     {
         bodyTrans = body.transform;
@@ -48,12 +51,20 @@ public class Brain2 : MonoBehaviour
         fulltimer = 0;
         reachedTarget = false;
         minimumDist = 1000;
+        parentPos = gameObject.transform.parent.transform.position;
     }
 
     float putInBetween(float l, float h, float n)
     {
         float diff = h - l;
         return l + diff * n;
+    }
+
+    Vector3 Normalize(float x, float y)
+    {
+        Vector3 vec = new Vector3(x, 0, y);
+        vec = Vector3.Normalize(vec);
+        return MaxForce*vec;
     }
 
     float leakyRelu(float input)
@@ -128,48 +139,48 @@ public class Brain2 : MonoBehaviour
         for (int i = 0; i < hiddenLayersNodes.Length; i++)
         {
             currentVector = matrixMult(weightsNBiases[i], currentVector);
-            currentVector = leakyRelu(currentVector);
+            currentVector = logisticAct(currentVector);
         }
 
-        return logisticAct(matrixMult(weightsNBiases[hiddenLayersNodes.Length], currentVector));
+        return (matrixMult(weightsNBiases[hiddenLayersNodes.Length], currentVector));
     }
 
     void move()
     {
         float[] inputVec = new float[inputNodes];
 
-        inputVec[0] = target.x;
-        inputVec[1] = target.z;
-        inputVec[2] = targetVel.x;
-        inputVec[3] = targetVel.z;
+        inputVec[0] = (target.x - bodyTrans.localPosition.x)/30;
+        inputVec[1] = (target.z - bodyTrans.localPosition.z)/30;
 
-        inputVec[4] = bodyTrans.localPosition.x;
-        inputVec[5] = bodyTrans.localPosition.z;
-        inputVec[6] = bodyRb.velocity.x;
-        inputVec[7] = bodyRb.velocity.z;
+        inputVec[2] = targetVel.x / 10;
+        inputVec[3] = targetVel.z / 10;
+        inputVec[4] = bodyRb.velocity.x / 10;
+        inputVec[5] = bodyRb.velocity.z / 10;
 
         float[] outputArr = NeuralNetwork(inputVec);
+        //Vector3 force = new Vector3(putInBetween(-MaxForce, MaxForce, outputArr[0]), 0, putInBetween(-MaxForce, MaxForce, outputArr[1]));
+        //bodyRb.AddRelativeForce(force);
 
-        Vector3 force = new Vector3(putInBetween(-MaxForce, MaxForce, outputArr[0]), 0, putInBetween(-MaxForce, MaxForce, outputArr[1]));
-
-        bodyRb.AddRelativeForce(force);
+        bodyRb.AddRelativeForce(Normalize(outputArr[0], outputArr[1]));
+        //appliedForce = Normalize(outputArr[0], outputArr[1]);
+        //Debug.Log(Normalize(outputArr[0], outputArr[1]));
     }
 
     void calcScore()
     {
-        if (reachedTarget == false && bodyColl.bounds.Contains(target) == true)
+        if (reachedTarget == false && bodyColl.bounds.Contains(parentPos + target) == true)
         {
             float timeScore = simTime - fulltimer;
             float velocityAlignScore = Vector3.Dot(targetVel, bodyRb.velocity) / (Vector3.Magnitude(targetVel) * Vector3.Magnitude(bodyRb.velocity));
-            float dirAlignScore = Vector3.Dot(targetVel, target - bodyTrans.position) / (Vector3.Magnitude(targetVel) * Vector3.Magnitude(target - bodyTrans.position));
-            float velocityMagScore = 1 / (1 + Mathf.Pow((Vector3.Magnitude(targetVel) - Vector3.Magnitude(bodyRb.velocity)), 2));
+            float dirAlignScore = -Vector3.Dot(targetVel, target - bodyTrans.localPosition) / (Vector3.Magnitude(targetVel) * Vector3.Magnitude(target - bodyTrans.localPosition));
+            float velMagScore = Vector3.Magnitude(bodyRb.velocity);
 
             reachedTarget = true;
-            score = 2 + timeScore + velocityAlignScore + dirAlignScore + velocityMagScore;
+            score = 2 + timeScore + velocityAlignScore + dirAlignScore + velMagScore;
         }
         else if(reachedTarget == false)
         {
-            float thisDist = Vector3.Distance(target, bodyTrans.position);
+            float thisDist = Vector3.Distance(target, bodyTrans.localPosition);
             minimumDist = Mathf.Min(thisDist, minimumDist);
         }
     }
@@ -182,9 +193,8 @@ public class Brain2 : MonoBehaviour
         }
         else
         {
-            float distanceScore = - minimumDist;
-            float speedScore = 15 / (1 + Mathf.Pow((Vector3.Magnitude(targetVel) - Vector3.Magnitude(bodyRb.velocity)), 2));
-            return -15 + distanceScore + speedScore;
+            float distanceScore = -minimumDist;// - Vector3.Distance(target, bodyTrans.position);
+            return distanceScore;
         }
     }
 
