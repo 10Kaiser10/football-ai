@@ -9,6 +9,7 @@ using System.Xml.Serialization;
 public class SaveNN : MonoBehaviour
 {
     public bool forSaving = true;
+    public bool forPlaying = true;
     public int indexToUse = 0;
 
     NNwnb bestNN = new NNwnb();
@@ -53,8 +54,8 @@ public class SaveNN : MonoBehaviour
         playerBrain.LayersNodes = bestNN.LayersNodes;
         playerBrain.weightsNBiases = bestNN.weightsNBiases[indexToUse];
 
-        Debug.Log(bestNN.inputNodes);
-        Debug.Log(bestNN.outputNodes);
+        //Debug.Log(bestNN.inputNodes);
+        //Debug.Log(bestNN.outputNodes);
     }
 
     public void setTarget()
@@ -68,8 +69,45 @@ public class SaveNN : MonoBehaviour
         gameObject.transform.parent.transform.GetChild(2).transform.Rotate(yrot, 0, 0);
     }
 
+    public void loadUp()
+    {
+        BinaryFormatter formatter = new BinaryFormatter();
+        FileStream saveFile = File.OpenRead("Assets/SavedNetworks/" + "playerMotion.xml");
+        bestNN = (NNwnb)formatter.Deserialize(saveFile);
+        saveFile.Close();
+    }
+
+    public int getInputNodes()
+    {
+        return bestNN.inputNodes;
+    }
+
+    public int getoutputNodes()
+    {
+        return bestNN.outputNodes;
+    }
+
+    public int[] getHiddenNodes()
+    {
+        return bestNN.hiddenLayersNodes;
+    }
+
+    public int[] getLayerNodes()
+    {
+        return bestNN.LayersNodes;
+    }
+
+    public float[][,] getwnbs()
+    {
+        return bestNN.weightsNBiases[indexToUse];
+    }
+
     private void Start()
     {
+        if(forPlaying == true)
+        {
+            return;
+        }
         if(forSaving == false)
         {
             playerBrain = gameObject.GetComponent<Brain2>();

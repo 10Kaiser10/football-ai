@@ -39,7 +39,7 @@ public class Evolver2 : MonoBehaviour
     public int[] LayersNodes = { 6,2};
     private float[][][,] weightsNBiases;
     private float[][][,] nextWeightsNBiases;
-    private Vector2 initiantionRange = new Vector2(-50000f, 50000f);
+    private Vector2 initiantionRange = new Vector2(-1, 1);
 
     public void Begin()
     {
@@ -112,7 +112,12 @@ public class Evolver2 : MonoBehaviour
         foreach (int item in scores) { sqsum += (item - avgFit)*(item - avgFit); }
         sqsum /= populationSize;
         foreach (GameObject item in population) { numCrossed += (item.transform.GetChild(0).GetComponent<Brain2>().reachedTarget) ? 1:0; }
+
+        string str = (generationNum.ToString() + " : " + avgFit.ToString() + " : " + sqsum.ToString() + " : " + numCrossed.ToString());
         Debug.Log(generationNum.ToString() + " : " + avgFit.ToString() + " : " + sqsum.ToString() + " : " + numCrossed.ToString());
+        System.IO.StreamWriter file = new System.IO.StreamWriter("Assets/Data/" + "playerTrain.txt", append: true);
+        file.WriteLine(str);
+        file.Close();
 
         System.Array.Sort(scores, weightsNBiases);
 
